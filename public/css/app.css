@@ -1,0 +1,172 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { font-family: system-ui, sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; }
+
+.navbar { background: #111827; border-bottom: 1px solid #1f2937; padding: .75rem 1rem; }
+.navbar-inner { max-width: 1100px; margin: auto; display: flex; justify-content: space-between; align-items: center; }
+.navbar-brand { color: #f59e0b; font-size: 1.25rem; font-weight: 700; text-decoration: none; }
+.navbar-links { display: flex; gap: 1rem; align-items: center; }
+.navbar-links a { color: #9ca3af; text-decoration: none; }
+.navbar-links a.active, .navbar-links a:hover { color: #f59e0b; }
+.btn-admin { background: #1f2937; padding: .35rem .75rem; border-radius: 6px; color: #9ca3af !important; font-size: .85rem; }
+
+.main-content { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+
+.hero { text-align: center; padding: 2.5rem 1rem; }
+.hero h1 { font-size: 2.5rem; font-weight: 800; color: #f59e0b; }
+.hero p { color: #6b7280; margin-top: .5rem; }
+
+.filter-bar { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 2rem; }
+.filter-form { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; }
+.filter-group label { display: block; font-size: .75rem; color: #6b7280; margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .05em; }
+.filter-pills { display: flex; gap: .5rem; flex-wrap: wrap; }
+.pill { padding: .3rem .75rem; border-radius: 20px; border: 1px solid #374151; color: #9ca3af; text-decoration: none; font-size: .85rem; transition: all .15s; }
+.pill:hover, .pill.active { background: #1f2937; color: #f59e0b; border-color: #f59e0b; }
+.pill-live.active { color: #ef4444; border-color: #ef4444; }
+.pill-finished.active { color: #10b981; border-color: #10b981; }
+.pill-upcoming.active { color: #3b82f6; border-color: #3b82f6; }
+.filter-select { background: #1f2937; border: 1px solid #374151; color: #e2e8f0; padding: .3rem .6rem; border-radius: 6px; font-size: .85rem; }
+
+.matches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+.match-card { background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 1.25rem; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: .75rem; transition: border-color .2s, transform .2s; }
+.match-card:hover { border-color: #f59e0b; transform: translateY(-2px); }
+.match-stage { font-size: .75rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; }
+.match-teams { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.team { display: flex; flex-direction: column; align-items: center; gap: .4rem; flex: 1; }
+.team-flag { width: 48px; height: auto; border-radius: 4px; }
+.team-flag-placeholder { font-size: 2rem; }
+.team-name { font-weight: 600; font-size: .9rem; text-align: center; }
+.match-vs { display: flex; flex-direction: column; align-items: center; gap: .25rem; }
+.vs-text { font-weight: 700; color: #6b7280; font-size: 1rem; }
+.match-date-small { font-size: .7rem; color: #4b5563; text-align: center; line-height: 1.4; }
+.match-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.video-count { font-size: .8rem; color: #6b7280; }
+
+.badge { padding: .25rem .65rem; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+.badge-live { background: #450a0a; color: #ef4444; border: 1px solid #ef4444; }
+.badge-finished { background: #052e16; color: #10b981; border: 1px solid #10b981; }
+.badge-upcoming { background: #0c1a3a; color: #3b82f6; border: 1px solid #3b82f6; }
+
+.empty-state { text-align: center; padding: 4rem 1rem; color: #4b5563; }
+.empty-icon { font-size: 3rem; display: block; margin-bottom: 1rem; }
+
+.alert { padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+.alert-success { background: #052e16; color: #10b981; border: 1px solid #10b981; }
+
+.footer { text-align: center; padding: 2rem 1rem; color: #374151; font-size: .85rem; margin-top: 3rem; border-top: 1px solid #111827; }
+
+.group-section { margin-bottom: 2.5rem; }
+.group-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding: .5rem 0; border-bottom: 2px solid #f59e0b; }
+.group-title { font-size: 1.1rem; font-weight: 700; color: #f59e0b; letter-spacing: .05em; }
+.group-count { font-size: .8rem; color: #6b7280; }
+
+.match-detail-wrapper { max-width: 800px; margin: 0 auto; padding: 1rem; }
+.back-link { color: #6b7280; text-decoration: none; font-size: .9rem; display: inline-block; margin-bottom: 1.5rem; }
+.back-link:hover { color: #f59e0b; }
+.match-header-detail { background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.match-stage-detail { font-size: .8rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 1rem; text-align: center; }
+.match-teams-detail { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.team-detail { display: flex; flex-direction: column; align-items: center; gap: .5rem; flex: 1; }
+.team-detail h2 { font-size: 1.2rem; font-weight: 700; text-align: center; }
+.team-flag-lg { width: 80px; border-radius: 6px; }
+.match-vs-detail { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+.vs-large { font-size: 1.5rem; font-weight: 800; color: #6b7280; }
+.match-date-detail { font-size: .8rem; color: #6b7280; text-align: center; }
+.spoiler-shield { background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center; }
+.score-hidden { display: flex; flex-direction: column; align-items: center; gap: .75rem; }
+.btn-reveal { background: #f59e0b; color: #000; border: none; padding: .6rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; }
+.btn-reveal:hover { background: #d97706; }
+.spoiler-hint { color: #6b7280; font-size: .85rem; }
+.scoreboard { display: flex; align-items: center; gap: 1rem; justify-content: center; margin: .5rem 0; }
+.score-number { font-size: 3rem; font-weight: 900; color: #f59e0b; }
+.score-dash { font-size: 2rem; color: #6b7280; }
+.winner-label { color: #10b981; font-size: 1.1rem; font-weight: 700; margin: .5rem 0; }
+.btn-hide-score { background: #1f2937; color: #9ca3af; border: 1px solid #374151; padding: .4rem 1rem; border-radius: 6px; cursor: pointer; margin-top: .5rem; }
+.match-live-notice { color: #ef4444; font-size: 1.1rem; font-weight: 700; }
+.match-upcoming-notice { color: #3b82f6; font-size: 1rem; }
+.highlights-section { background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 1.5rem; }
+.highlights-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
+.highlights-header h2 { font-size: 1.1rem; font-weight: 700; }
+.lang-selector { display: flex; gap: .5rem; flex-wrap: wrap; }
+.lang-pill { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: .3rem .75rem; border-radius: 20px; font-size: .8rem; cursor: pointer; }
+.lang-pill.active { border-color: #f59e0b; color: #f59e0b; }
+.video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.video-card { background: #0a0e1a; border: 1px solid #1f2937; border-radius: 10px; overflow: hidden; }
+.video-title { padding: .75rem; font-size: .85rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.video-lang-tag { font-size: 1rem; }
+.video-embed-wrapper { position: relative; padding-bottom: 56.25%; height: 0; }
+.video-embed-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+.no-highlights { text-align: center; padding: 3rem; color: #4b5563; }
+.no-highlights span { font-size: 2.5rem; display: block; margin-bottom: .75rem; }
+.no-videos-msg { text-align: center; color: #6b7280; padding: 1rem; }
+
+.video-meta { padding: .75rem; border-bottom: 1px solid #1f2937; }
+.video-title-text { font-size: .85rem; font-weight: 600; color: #e2e8f0; display: block; margin-bottom: .5rem; }
+.video-badges { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+.platform-badge { padding: .2rem .6rem; border-radius: 6px; font-size: .75rem; font-weight: 700; }
+.platform-youtube { background: #1a0a0a; color: #ff4444; border: 1px solid #ff4444; }
+.platform-dailymotion { background: #0a1020; color: #0066ff; border: 1px solid #0066ff; }
+.platform-vimeo { background: #0a1a1a; color: #1ab7ea; border: 1px solid #1ab7ea; }
+.platform-twitch { background: #1a0a2e; color: #9147ff; border: 1px solid #9147ff; }
+.lang-badge { background: #1f2937; color: #9ca3af; border: 1px solid #374151; padding: .2rem .5rem; border-radius: 6px; font-size: .72rem; }
+.duration-badge { background: #1f2937; color: #6b7280; padding: .2rem .5rem; border-radius: 6px; font-size: .72rem; }
+
+/* Hide YouTube title bar overlay */
+.video-embed-wrapper {
+    position: relative;
+}
+.video-embed-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    background: #000;
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* YouTube title blur overlay — responsive */
+.video-embed-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+.video-embed-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 15%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.6) 60%, transparent 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* Remove old broken overlay attempts */
+.video-embed-wrapper::after { display: none !important; }
+.video-embed-wrapper::before { display: none !important; }
+
+/* Responsive blurred title cover */
+.yt-cover-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 14%;
+    z-index: 10;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0;
+}
+.yt-cover-bar-bg {
+    position: absolute;
+    inset: -20px;
+    background-size: cover;
+    background-position: top center;
+    filter: blur(14px) brightness(0.55);
+    transform: scale(1.3);
+}

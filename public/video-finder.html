@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video Auto-Finder</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #060b14; color: #e2e8f0; min-height: 100vh; padding: 2rem; }
+  h1 { color: #f59e0b; font-size: 1.4rem; margin-bottom: 1.5rem; }
+  .card { background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.25rem; }
+  label { display: block; font-size: .75rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .4rem; }
+  input, select { width: 100%; background: #0a0e1a; border: 1px solid #374151; color: #e2e8f0; padding: .6rem .8rem; border-radius: 8px; font-size: .9rem; font-family: inherit; margin-bottom: 1rem; }
+  input:focus, select:focus { outline: none; border-color: #f59e0b; }
+  .btn { padding: .6rem 1.4rem; border: none; border-radius: 8px; font-size: .9rem; font-family: inherit; cursor: pointer; font-weight: 700; transition: all .15s; }
+  .btn-primary { background: #f59e0b; color: #000; }
+  .btn-primary:hover { background: #d97706; }
+  .btn-primary:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
+  .btn-secondary { background: #1f2937; color: #9ca3af; border: 1px solid #374151; }
+  .btn-copy { background: #052e16; color: #10b981; border: 1px solid #10b981; font-size: .8rem; padding: .3rem .7rem; }
+  .results { display: grid; gap: .75rem; }
+  .result-card { background: #0a0e1a; border: 1px solid #1e293b; border-radius: 10px; overflow: hidden; transition: border-color .2s; }
+  .result-card:hover { border-color: #f59e0b; }
+  .result-header { padding: .75rem 1rem; display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; }
+  .result-title { font-size: .85rem; font-weight: 600; color: #e2e8f0; flex: 1; }
+  .result-meta { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .3rem; }
+  .badge { padding: .15rem .5rem; border-radius: 4px; font-size: .7rem; font-weight: 700; }
+  .badge-scorebat { background: #052e16; color: #10b981; border: 1px solid #10b981; }
+  .badge-youtube { background: #1a0a0a; color: #ff4444; border: 1px solid #ff4444; }
+  .badge-dm { background: #0a1020; color: #4d90fe; border: 1px solid #4d90fe; }
+  .badge-free { background: #1a1a0a; color: #f59e0b; border: 1px solid #f59e0b; }
+  .embed-url { font-family: monospace; font-size: .72rem; color: #4b5563; background: #060b14; padding: .4rem .75rem; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; gap: .5rem; word-break: break-all; }
+  .embed-url span { flex: 1; }
+  .preview-box { padding-bottom: 56.25%; position: relative; height: 0; border-top: 1px solid #1e293b; }
+  .preview-box iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+  .status { padding: .75rem 1rem; border-radius: 8px; font-size: .85rem; margin-bottom: 1rem; }
+  .status-loading { background: #0c1a3a; color: #3b82f6; border: 1px solid #3b82f6; }
+  .status-error { background: #1a0a0a; color: #ef4444; border: 1px solid #ef4444; }
+  .status-success { background: #052e16; color: #10b981; border: 1px solid #10b981; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; margin-right: .5rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toggle-preview { background: none; border: none; color: #6b7280; font-size: .75rem; cursor: pointer; padding: .25rem .5rem; }
+  .toggle-preview:hover { color: #e2e8f0; }
+  .copied { color: #10b981 !important; }
+  .section-title { font-size: .75rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .75rem; }
+  .how-to { font-size: .8rem; color: #4b5563; line-height: 1.6; }
+  .how-to b { color: #9ca3af; }
+  .how-to ol { padding-left: 1.2rem; margin-top: .5rem; }
+  .no-results { text-align: center; padding: 2rem; color: #4b5563; }
+  .tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  .tab { padding: .4rem .9rem; border-radius: 6px; border: 1px solid #374151; color: #6b7280; font-size: .8rem; cursor: pointer; font-family: inherit; background: transparent; }
+  .tab.active { background: #1f2937; color: #f59e0b; border-color: #f59e0b; }
+</style>
+</head>
+<body>
+
+<h1>🔍 Video Auto-Finder</h1>
+<p style="color:#6b7280;font-size:.85rem;margin-bottom:1.5rem;">Search Scorebat's free API for embeddable football highlights — no geo-restrictions</p>
+
+<div class="card">
+  <label>Match Search</label>
+  <input type="text" id="searchQuery" placeholder="e.g. Algeria  OR  Morocco Brazil  OR  World Cup 2026" value="Algeria">
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="searchScorbat()">🔍 Search Scorebat</button>
+    <button class="btn btn-secondary" onclick="searchPopular()">⚽ World Cup Latest</button>
+    <button class="btn btn-secondary" onclick="clearResults()">✕ Clear</button>
+  </div>
+</div>
+
+<div id="statusBox" style="display:none" class="status"></div>
+<div id="resultsBox" class="results"></div>
+
+<div class="card" style="margin-top:1.5rem">
+  <div class="section-title">📋 How to use in your admin panel</div>
+  <div class="how-to">
+    <ol>
+      <li>Search for a match above (e.g. "Algeria" or team names)</li>
+      <li>Find a working video — click <b>👁 Preview</b> to test it</li>
+      <li>Click <b>📋 Copy Embed URL</b></li>
+      <li>Go to your admin panel → match → Add Video → paste the URL in <b>Embed URL</b></li>
+      <li>Set Platform to <b>Scorebat</b>, save ✅</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+const SCOREBAT_API = 'https://www.scorebat.com/video-api/v3/feed/?token=';
+// Free tier - no token needed for limited requests
+const FREE_API = 'https://www.scorebat.com/video-api/v3/feed/';
+
+let allResults = [];
+let previewing = {};
+
+async function searchScorbat() {
+  const query = document.getElementById('searchQuery').value.trim().toLowerCase();
+  if (!query) return;
+  showStatus('loading', 'Fetching from Scorebat API...');
+  
+  try {
+    // Try free API first
+    const res = await fetch('https://www.scorebat.com/video-api/v3/feed/', {
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!res.ok) throw new Error('API returned ' + res.status);
+    const data = await res.json();
+    
+    const videos = data.response || data || [];
+    
+    // Filter by query
+    const filtered = videos.filter(v => {
+      const title = (v.title || '').toLowerCase();
+      const comp = (v.competition?.name || '').toLowerCase();
+      return query.split(' ').every(word => title.includes(word) || comp.includes(word));
+    });
+
+    allResults = filtered;
+    displayResults(filtered, query);
+    
+    if (filtered.length === 0) {
+      showStatus('error', `No results for "${query}". Try broader terms like a team name only.`);
+    } else {
+      showStatus('success', `Found ${filtered.length} video${filtered.length > 1 ? 's' : ''} for "${query}"`);
+    }
+  } catch (err) {
+    // Fallback: show manual instructions
+    showStatus('error', 'Scorebat free API limit reached or unavailable. See manual sources below.');
+    showFallback(query);
+  }
+}
+
+async function searchPopular() {
+  showStatus('loading', 'Fetching latest World Cup highlights...');
+  try {
+    const res = await fetch('https://www.scorebat.com/video-api/v3/feed/');
+    if (!res.ok) throw new Error('API ' + res.status);
+    const data = await res.json();
+    const videos = (data.response || data || []).slice(0, 20);
+    allResults = videos;
+    displayResults(videos, '');
+    showStatus('success', `Showing ${videos.length} latest highlights from Scorebat`);
+  } catch (err) {
+    showStatus('error', 'Could not reach Scorebat. Showing alternative sources.');
+    showFallback('world cup');
+  }
+}
+
+function displayResults(videos, query) {
+  const box = document.getElementById('resultsBox');
+  if (videos.length === 0) {
+    box.innerHTML = '<div class="no-results">🏟️ No videos found. Try different search terms.</div>';
+    return;
+  }
+
+  box.innerHTML = videos.map((v, i) => {
+    // Get the best embed URL from the video
+    const embedUrl = getEmbedUrl(v);
+    const thumb = v.thumbnail || '';
+    const competition = v.competition?.name || 'Football';
+    const date = v.date ? new Date(v.date).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'}) : '';
+
+    return `
+    <div class="result-card" id="card-${i}">
+      <div class="result-header">
+        <div style="flex:1">
+          <div class="result-title">${escHtml(v.title || 'Untitled')}</div>
+          <div class="result-meta">
+            <span class="badge badge-scorebat">⚽ Scorebat</span>
+            <span class="badge badge-free">🆓 Free</span>
+            ${competition ? `<span class="badge" style="background:#111827;color:#6b7280;border:1px solid #374151">${escHtml(competition)}</span>` : ''}
+            ${date ? `<span style="font-size:.72rem;color:#4b5563;align-self:center">${date}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="embed-url">
+        <span id="url-${i}">${escHtml(embedUrl)}</span>
+        <div style="display:flex;gap:.4rem;flex-shrink:0">
+          <button class="btn btn-copy" onclick="copyUrl(${i})" id="copy-${i}">📋 Copy</button>
+          <button class="toggle-preview" onclick="togglePreview(${i}, '${escAttr(embedUrl)}')" id="prev-btn-${i}">👁 Preview</button>
+        </div>
+      </div>
+      <div id="preview-${i}" style="display:none">
+        <div class="preview-box">
+          <iframe id="iframe-${i}" src="" allowfullscreen loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getEmbedUrl(video) {
+  // Scorebat videos have an embed field or videos array
+  if (video.embed) {
+    // Extract src from embed HTML if it's an iframe string
+    const srcMatch = video.embed.match(/src=["']([^"']+)["']/);
+    if (srcMatch) return srcMatch[1];
+    return video.embed;
+  }
+  if (video.videos && video.videos.length > 0) {
+    const v = video.videos[0];
+    if (v.embed) {
+      const srcMatch = v.embed.match(/src=["']([^"']+)["']/);
+      if (srcMatch) return srcMatch[1];
+    }
+    return v.embed || v.url || '';
+  }
+  return video.url || '';
+}
+
+function togglePreview(i, url) {
+  const previewDiv = document.getElementById('preview-' + i);
+  const iframe = document.getElementById('iframe-' + i);
+  const btn = document.getElementById('prev-btn-' + i);
+  
+  if (previewDiv.style.display === 'none') {
+    iframe.src = url;
+    previewDiv.style.display = 'block';
+    btn.textContent = '✕ Close';
+  } else {
+    iframe.src = '';
+    previewDiv.style.display = 'none';
+    btn.textContent = '👁 Preview';
+  }
+}
+
+function copyUrl(i) {
+  const url = document.getElementById('url-' + i).textContent.trim();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-' + i);
+    btn.textContent = '✅ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copy';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function showFallback(query) {
+  const encoded = encodeURIComponent(query + ' highlights');
+  document.getElementById('resultsBox').innerHTML = `
+  <div class="card">
+    <div class="section-title">🔗 Alternative Free Sources — Search Manually</div>
+    <div style="display:grid;gap:.6rem;margin-top:.5rem">
+      <a href="https://www.scorebat.com/search/?q=${encoded}" target="_blank" style="color:#10b981;font-size:.85rem">⚽ Scorebat.com → search "${query}"</a>
+      <a href="https://www.dailymotion.com/search/${encoded}/videos" target="_blank" style="color:#4d90fe;font-size:.85rem">🎬 Dailymotion → search "${query}"</a>
+      <a href="https://streamff.com" target="_blank" style="color:#f59e0b;font-size:.85rem">💨 Streamff.com → browse recent clips</a>
+      <a href="https://www.reddit.com/r/soccer/search/?q=${encoded}&sort=new" target="_blank" style="color:#ff6314;font-size:.85rem">🟠 Reddit r/soccer → "${query}"</a>
+    </div>
+    <p style="font-size:.75rem;color:#4b5563;margin-top:.75rem">Find a video → right-click embed → copy src URL → paste in your admin panel</p>
+  </div>`;
+}
+
+function clearResults() {
+  document.getElementById('resultsBox').innerHTML = '';
+  document.getElementById('statusBox').style.display = 'none';
+  allResults = [];
+}
+
+function showStatus(type, msg) {
+  const box = document.getElementById('statusBox');
+  box.style.display = 'block';
+  box.className = 'status status-' + type;
+  box.innerHTML = type === 'loading' ? `<span class="spinner"></span>${msg}` : msg;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// Auto-search on load
+searchScorbat();
+</script>
+</body>
+</html>
