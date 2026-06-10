@@ -1,1 +1,1 @@
-web: php artisan migrate --seed --force && php heroku-php-apache2 public/
+web: php artisan config:clear && php artisan cache:clear && php artisan migrate --seed --force && php heroku-php-apache2 public/
