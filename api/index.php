@@ -1,11 +1,11 @@
 <?php
 
-// Point explicitly to your subfolder path
-$projectPath = __DIR__ . '/../worldcup-laravel';
+// 1. Force the PHP environment to look inside your inner project folder
+$projectRoot = __DIR__ . '/../worldcup-laravel';
 
-if (file_exists($projectPath . '/public/index.php')) {
-    require $projectPath . '/public/index.php';
-} else {
-    // Fallback directly to root if paths get flattened
-    require __DIR__ . '/../public/index.php';
-}
+// 2. Override the global server paths so Laravel knows exactly where the public assets sit
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['DOCUMENT_ROOT'] = $projectRoot . '/public';
+
+// 3. Boot Laravel using its real entry point
+require $projectRoot . '/public/index.php';
