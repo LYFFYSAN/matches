@@ -9,11 +9,10 @@
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "/api/index.php"
+            "dest": "/worldcup-laravel/public/index.php"
         }
     ],
     "env": {
-        "PHP_VERSION": "8.3",
         "APP_ENV": "production",
         "APP_DEBUG": "true",
         "LOG_CHANNEL": "stderr",
