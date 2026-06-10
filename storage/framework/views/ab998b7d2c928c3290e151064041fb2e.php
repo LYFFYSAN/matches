@@ -194,6 +194,22 @@
         facadeEl.style.display = 'none';
         document.getElementById('player-' + index).style.display = 'block';
 
+        // Hide .yt-title-blur when THIS player goes fullscreen, restore on exit
+        (function(idx) {
+            function onFsChange() {
+                var isFs = !!(document.fullscreenElement
+                           || document.webkitFullscreenElement
+                           || document.mozFullScreenElement
+                           || document.msFullscreenElement);
+                var blur = document.getElementById('title-blur-' + idx);
+                if (blur) blur.style.opacity = isFs ? '0' : '1';
+            }
+            document.addEventListener('fullscreenchange',       onFsChange);
+            document.addEventListener('webkitfullscreenchange', onFsChange);
+            document.addEventListener('mozfullscreenchange',    onFsChange);
+            document.addEventListener('MSFullscreenChange',     onFsChange);
+        })(index);
+
         var isYT = embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be');
         var isDM = embedUrl.includes('dailymotion.com');
         var sep  = embedUrl.includes('?') ? '&' : '?';
@@ -223,10 +239,25 @@
                         : '';
             players[index].dmId = dmId;
             var dmSrc = 'https://www.dailymotion.com/embed/video/' + dmId +
-                        '?autoplay=1&mute=1&controls=0&queue-enable=0';
+                        '?autoplay=1&mute=1&controls=1&queue-enable=0&api=postMessage';
             document.getElementById('iframe-' + index).src = dmSrc;
             players[index].type = 'dm';
-            setTimeout(function() { injectButtons(index); }, 500);
+            // Listen for Dailymotion postMessage state events
+            window.addEventListener('message', function(evt) {
+                try {
+                    var data = typeof evt.data === 'string' ? JSON.parse(evt.data) : evt.data;
+                    if (!data || data.event === undefined) return;
+                    var pauseBtn = document.getElementById('pause-' + index);
+                    if (data.event === 'playing') {
+                        players[index].playing = true;
+                        if (pauseBtn) pauseBtn.innerHTML = '⏸ Pause';
+                    } else if (data.event === 'pause') {
+                        players[index].playing = false;
+                        if (pauseBtn) pauseBtn.innerHTML = '▶ Play';
+                    }
+                } catch(e) {}
+            });
+            setTimeout(function() { injectButtons(index); }, 600);
         } else {
             document.getElementById('iframe-' + index).src =
                 embedUrl + sep + 'autoplay=1&mute=1';
@@ -290,36 +321,93 @@
         });
     }
 
+    // Send postMessage command to Dailymotion iframe
+    // DM requires the message sent to 'https://www.dailymotion.com'
+    function dmCommand(index, cmd) {
+        var iframe = document.getElementById('iframe-' + index);
+        if (!iframe || !iframe.contentWindow) return;
+        iframe.contentWindow.postMessage(
+            JSON.stringify({ command: cmd }),
+            'https://www.dailymotion.com'
+        );
+    }
+
     function injectButtons(index) {
         var blocker = document.getElementById('blocker-' + index);
-        if (!blocker || document.getElementById('unmute-' + index)) return;
+        if (!blocker || document.getElementById('btn-group-' + index)) return;
 
-        // Unmute button
-        var btn = document.createElement('div');
-        btn.id = 'unmute-' + index;
-        btn.className = 'unmute-btn';
-        btn.innerHTML = '🔇 Unmute';
-        btn.onclick = function(e) {
+        var p = players[index];
+
+        // Wrap all buttons in a single flex row container anchored at bottom-center
+        var group = document.createElement('div');
+        group.id = 'btn-group-' + index;
+        group.style.cssText = [
+            'position:absolute',
+            'bottom:.75rem',
+            'left:50%',
+            'transform:translateX(-50%)',
+            'display:flex',
+            'flex-direction:row',
+            'align-items:center',
+            'gap:.5rem',
+            'z-index:20',
+            'opacity:0',
+            'transition:opacity .25s',
+            'pointer-events:none',
+            'white-space:nowrap',
+        ].join(';');
+
+        // Show group on blocker hover
+        blocker.addEventListener('mouseenter', function() { group.style.opacity = '1'; group.style.pointerEvents = 'all'; });
+        blocker.addEventListener('mouseleave', function() { group.style.opacity = '0'; group.style.pointerEvents = 'none'; });
+
+        var btnStyle = [
+            'background:rgba(0,0,0,.78)',
+            'color:#fff',
+            'font-size:.8rem',
+            'font-weight:700',
+            'padding:.35rem .85rem',
+            'border-radius:20px',
+            'cursor:pointer',
+            'border:1px solid rgba(255,255,255,.22)',
+            'letter-spacing:.02em',
+            'transition:background .15s,transform .15s',
+            'white-space:nowrap',
+        ].join(';');
+
+        function hoverOn(el)  { el.style.background='#f59e0b'; el.style.color='#000'; el.style.borderColor='#f59e0b'; el.style.transform='translateY(-2px)'; }
+        function hoverOff(el) { el.style.background='rgba(0,0,0,.78)'; el.style.color='#fff'; el.style.borderColor='rgba(255,255,255,.22)'; el.style.transform=''; }
+
+        // ── Unmute ──────────────────────────
+        var unmuteBtn = document.createElement('div');
+        unmuteBtn.id = 'unmute-' + index;
+        unmuteBtn.style.cssText = btnStyle;
+        unmuteBtn.innerHTML = '🔇 Unmute';
+        unmuteBtn.addEventListener('mouseenter', function() { hoverOn(unmuteBtn); });
+        unmuteBtn.addEventListener('mouseleave', function() { hoverOff(unmuteBtn); });
+        unmuteBtn.onclick = function(e) {
             e.stopPropagation();
-            var p = players[index];
             if (p && p.player && p.player.unMute) {
                 p.player.unMute();
                 p.player.setVolume(100);
+            } else if (p && p.type === 'dm') {
+                dmCommand(index, 'unmute');
             } else {
-                // Non-YT: reload without mute
                 var iframe = document.getElementById('iframe-' + index);
                 if (iframe) iframe.src = iframe.src.replace('&mute=1','').replace('mute=1&','').replace('mute=1','');
             }
             p.muted = false;
-            btn.remove();
+            unmuteBtn.remove();
         };
-        blocker.appendChild(btn);
+        group.appendChild(unmuteBtn);
 
-        // Fullscreen button
+        // ── Fullscreen ───────────────────────
         var fsBtn = document.createElement('div');
         fsBtn.id = 'fs-' + index;
-        fsBtn.className = 'fs-btn';
+        fsBtn.style.cssText = btnStyle;
         fsBtn.innerHTML = '⛶ Fullscreen';
+        fsBtn.addEventListener('mouseenter', function() { hoverOn(fsBtn); });
+        fsBtn.addEventListener('mouseleave', function() { hoverOff(fsBtn); });
         fsBtn.onclick = function(e) {
             e.stopPropagation();
             var el = document.getElementById('yt-player-' + index + '-iframe')
@@ -328,24 +416,49 @@
             if (el && el.requestFullscreen) el.requestFullscreen();
             else if (el && el.webkitRequestFullscreen) el.webkitRequestFullscreen();
         };
-        blocker.appendChild(fsBtn);
+        group.appendChild(fsBtn);
 
-        // Pause/Play button
+        // ── Pause / Play ─────────────────────
         var pauseBtn = document.createElement('div');
         pauseBtn.id = 'pause-' + index;
-        pauseBtn.className = 'pause-btn';
+        pauseBtn.style.cssText = btnStyle;
         pauseBtn.innerHTML = '⏸ Pause';
-        // Only show pause for YouTube (DM doesn't support it reliably)
-        if (players[index] && players[index].type === 'yt') {
+        pauseBtn.addEventListener('mouseenter', function() { hoverOn(pauseBtn); });
+        pauseBtn.addEventListener('mouseleave', function() { hoverOff(pauseBtn); });
+
+        if (p && p.type === 'yt') {
+            // YouTube: use IFrame API
             pauseBtn.onclick = function(e) {
                 e.stopPropagation();
-                var p = players[index];
-                if (p.playing) { p.player.pauseVideo(); pauseBtn.innerHTML = '▶ Play'; }
-                else           { p.player.playVideo();  pauseBtn.innerHTML = '⏸ Pause'; }
+                if (p.playing) {
+                    p.player.pauseVideo();
+                    pauseBtn.innerHTML = '▶ Play';
+                } else {
+                    p.player.playVideo();
+                    pauseBtn.innerHTML = '⏸ Pause';
+                }
                 p.playing = !p.playing;
             };
-            blocker.appendChild(pauseBtn);
+            group.appendChild(pauseBtn);
+
+        } else if (p && p.type === 'dm') {
+            // Dailymotion: postMessage API
+            // DM supports: play, pause, seek, mute, unmute via postMessage
+            pauseBtn.onclick = function(e) {
+                e.stopPropagation();
+                if (p.playing) {
+                    dmCommand(index, 'pause');
+                    pauseBtn.innerHTML = '▶ Play';
+                } else {
+                    dmCommand(index, 'play');
+                    pauseBtn.innerHTML = '⏸ Pause';
+                }
+                p.playing = !p.playing;
+            };
+            group.appendChild(pauseBtn);
         }
+
+        blocker.appendChild(group);
     }
 
     function hideVideo(index) {
@@ -533,58 +646,22 @@
  * But since we're inside aspect-ratio, we use % of the inner height instead.
  * Simplest: just use height: 8.5% — works because parent has defined height via aspect-ratio.
  */
+/* ── Blocker ────────────────────────────────────────────────
+   Transparent overlay that intercepts hover events so the
+   YouTube title / controls don't show on mouse-over.
+   Button group is injected absolutely via JS at bottom-center. */
 .iframe-blocker {
     position: absolute;
     inset: 0;
     z-index: 10;
     cursor: default;
     background: transparent;
-}
-/* Keep blocker active inside fullscreen */
-.iframe-blocker:-webkit-full-screen { display: flex; }
-.iframe-blocker:-moz-full-screen    { display: flex; }
-.iframe-blocker:-ms-fullscreen      { display: flex; }
-.iframe-blocker:fullscreen          { display: flex; }
-
-/* Prevent text selection on blocker */
-.iframe-blocker {
+    pointer-events: all;
     user-select: none;
     -webkit-user-select: none;
-    pointer-events: all;
 }
 
-/* All video control buttons */
-.unmute-btn, .fs-btn, .pause-btn {
-    position: absolute;
-    background: rgba(0,0,0,.75);
-    color: #fff;
-    font-size: .8rem;
-    font-weight: 700;
-    padding: .35rem .85rem;
-    border-radius: 20px;
-    cursor: pointer;
-    z-index: 20;
-    border: 1px solid rgba(255,255,255,.2);
-    letter-spacing: .02em;
-    /* Hidden by default — show on blocker hover */
-    opacity: 0;
-    transition: opacity .25s, background .15s;
-}
-.unmute-btn { top: .75rem; left: .75rem; }
-.fs-btn     { top: .75rem; right: .75rem; }
-.pause-btn  { bottom: .75rem; right: .75rem; }
-
-/* Show all buttons when hovering the blocker */
-.iframe-blocker:hover .unmute-btn,
-.iframe-blocker:hover .fs-btn,
-.iframe-blocker:hover .pause-btn {
-    opacity: 1;
-}
-.unmute-btn:hover, .fs-btn:hover, .pause-btn:hover {
-    background: #f59e0b;
-    color: #000;
-    border-color: #f59e0b;
-}
+/* Button styles are applied inline via JS injectButtons() */
 
 /*
  * ── Persistent YouTube title blur bar ────────────────────────────────────────
@@ -628,12 +705,7 @@
     border-radius: 8px 8px 0 0;
 }
 
-/* Inside fullscreen the title bar is taller — bump height slightly */
-.player-inner:fullscreen          .yt-title-blur,
-.player-inner:-webkit-full-screen .yt-title-blur,
-.player-inner:-moz-full-screen    .yt-title-blur {
-    height: 10%;
-}
+/* Fullscreen hide is handled via JS fullscreenchange event below */
 
 </style>
 <?php $__env->stopPush(); ?>
